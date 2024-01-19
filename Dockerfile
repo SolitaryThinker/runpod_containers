@@ -1,10 +1,30 @@
-FROM tensorrt_llm/release:latest
+#FROM tensorrt_llm/release:latest
+#FROM wlsaidhi/te-nsys:latest
+FROM wlsaidhi/msamp-te:0.3
 #FROM wlsaidhi/trt-llm-devel
 #FROM nvcr.io/nvidia/pytorch:23.10-py3
 
 ENV SHELL=/bin/bash
 ENV PYTHONUNBUFFERED=True
 ENV DEBIAN_FRONTEND=noninteractive
+
+# Override the default huggingface cache directory.
+ENV HF_HOME="/runpod-volume/.cache/huggingface/"
+ENV HF_DATASETS_CACHE="/runpod-volume/.cache/huggingface/datasets/"
+ENV DEFAULT_HF_METRICS_CACHE="/runpod-volume/.cache/huggingface/metrics/"
+ENV DEFAULT_HF_MODULES_CACHE="/runpod-volume/.cache/huggingface/modules/"
+ENV HUGGINGFACE_HUB_CACHE="/runpod-volume/.cache/huggingface/hub/"
+ENV HUGGINGFACE_ASSETS_CACHE="/runpod-volume/.cache/huggingface/assets/"
+
+# Faster transfer of models from the hub to the container
+ENV HF_HUB_ENABLE_HF_TRANSFER="1"
+
+# Shared python package cache
+ENV VIRTUALENV_OVERRIDE_APP_DATA="/runpod-volume/.cache/virtualenv/"
+ENV PIP_CACHE_DIR="/runpod-volume/.cache/pip/"
+
+# Set Default Python Version
+ENV PYTHON_VERSION="3.10"
 
 
 
@@ -29,9 +49,13 @@ RUN apt-get update --yes && \
     zip && \
 
     # Build Tools and Development
-    #apt install --yes --no-install-recommends \
-    #build-essential \
-    #cmake && \
+    apt install --yes --no-install-recommends \
+    build-essential \
+    make \
+    cmake \
+    gfortran \
+    libblas-dev \
+    liblapack-dev && \
 
 
     # Deep Learning Dependencies and Miscellaneous
@@ -81,11 +105,11 @@ WORKDIR /root
 
 
 # change/remote as needed
-RUN git clone https://github.com/SolitaryThinker/dotfiles.git
-WORKDIR /root/dotfiles/
-RUN chmod +x setup.sh
-RUN ./setup.sh -cf vim
-RUN ./setup.sh -cf bash
+#RUN git clone https://github.com/SolitaryThinker/dotfiles.git
+#WORKDIR /root/dotfiles/
+#RUN chmod +x setup.sh
+#RUN ./setup.sh -cf vim
+#RUN ./setup.sh -cf bash
 
 WORKDIR /workspace/
 RUN git clone https://github.com/NVIDIA/TensorRT-LLM.git
