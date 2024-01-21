@@ -1,8 +1,10 @@
 #FROM tensorrt_llm/release:latest
 #FROM wlsaidhi/te-nsys:latest
-FROM wlsaidhi/msamp-te:0.3
+FROM wlsaidhi/msamp-te:te-1.2-pytorch-23.09
 #FROM wlsaidhi/trt-llm-devel
 #FROM nvcr.io/nvidia/pytorch:23.10-py3
+
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 ENV SHELL=/bin/bash
 ENV PYTHONUNBUFFERED=True
@@ -32,16 +34,27 @@ WORKDIR /
 
 # Update, upgrade, install packages and clean up
 RUN apt-get update --yes && \
+    apt-get upgrade --yes && \
 
     apt install --yes --no-install-recommends \
     bash \
-    nginx \
+    ca-certificates \
+    curl \
+    file \
     git \
+    inotify-tools \
+    libgl1 \
     vim \
+    nano \
     tmux \
+    nginx \
+    stow \
+
+    # Required for SSH access
     openssh-server \
-    #procps \
-    #rsync \
+
+    procps \
+    rsync \
     sudo \
     software-properties-common \
     unzip \
@@ -67,9 +80,10 @@ RUN apt-get update --yes && \
     #libssl-dev && \
 
     # File Systems and Storage
-    #apt install --yes --no-install-recommends \
-    #cifs-utils \
-    #nfs-common && \
+    apt install --yes --no-install-recommends \
+    cifs-utils \
+    nfs-common \
+    zstd &&\
 
     # Add the Python PPA and install Python versions
     #add-apt-repository ppa:deadsnakes/ppa && \
@@ -91,9 +105,9 @@ RUN apt-get update --yes && \
     #python3.11-distutils && \
 
     # Cleanup
-    #apt-get autoremove -y && \
-    #apt-get clean && \
-    #rm -rf /var/lib/apt/lists/* && \
+    apt-get autoremove -y && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* && \
 
     echo "en_US.UTF-8 UTF-8" > /etc/locale.gen
 
@@ -105,27 +119,29 @@ WORKDIR /root
 
 
 # change/remote as needed
-#RUN git clone https://github.com/SolitaryThinker/dotfiles.git
-#WORKDIR /root/dotfiles/
-#RUN chmod +x setup.sh
+RUN git clone https://github.com/SolitaryThinker/dotfiles.git
+WORKDIR /root/dotfiles/
+RUN chmod +x setup.sh
 #RUN ./setup.sh -cf vim
 #RUN ./setup.sh -cf bash
+#RUN rm /root/.gitconfig
+#RUN stow git
 
 WORKDIR /workspace/
-RUN git clone https://github.com/NVIDIA/TensorRT-LLM.git
+#RUN git clone https://github.com/NVIDIA/TensorRT-LLM.git
 
-RUN mkdir will && \
-    cd will/ && \
-    git clone https://github.com/SolitaryThinker/TensorRT-LLM.git
+#RUN mkdir will && \
+    #cd will/ && \
+    #git clone https://github.com/SolitaryThinker/TensorRT-LLM.git
 
 
 
 WORKDIR /workspace/
 
 # change as needed
-RUN wget \
-https://huggingface.co/datasets/anon8231489123/ShareGPT_Vicuna_unfiltered/resolve/main/ShareGPT_V3_unfiltered_cleaned_split.json
-RUN mv ShareGPT_V3_unfiltered_cleaned_split.json share_gpt.json
+#RUN wget \
+#https://huggingface.co/datasets/anon8231489123/ShareGPT_Vicuna_unfiltered/resolve/main/ShareGPT_V3_unfiltered_cleaned_split.json
+#RUN mv ShareGPT_V3_unfiltered_cleaned_split.json share_gpt.json
 
 
 WORKDIR /
