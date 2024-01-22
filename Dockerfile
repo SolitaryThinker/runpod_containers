@@ -1,6 +1,6 @@
 #FROM tensorrt_llm/release:latest
 #FROM wlsaidhi/te-nsys:latest
-FROM wlsaidhi/msamp-te:te-1.2-pytorch-23.09
+FROM wlsaidhi/msamp-te:te-1.3-pytorch-23.09-0.2
 #FROM wlsaidhi/trt-llm-devel
 #FROM nvcr.io/nvidia/pytorch:23.10-py3
 
@@ -113,10 +113,12 @@ RUN apt-get update --yes && \
 
 #### DO NOT REMOVE
 COPY env.sh /workspace/env.sh
-RUN source /workspace/env.sh
+#RUN source /workspace/env.sh
 WORKDIR /root
 ### DO NOT REMOVE
 
+
+RUN pip3 install transformers
 
 # change/remote as needed
 RUN git clone https://github.com/SolitaryThinker/dotfiles.git
@@ -148,6 +150,7 @@ WORKDIR /
 
 # NGINX Proxy
 COPY nginx.conf /etc/nginx/nginx.conf
+
 #COPY readme.html /usr/share/nginx/html/readme.html
 
 # Copy the README.md
@@ -155,12 +158,13 @@ COPY nginx.conf /etc/nginx/nginx.conf
 
 
 # Start Scripts
-COPY start.sh /
-RUN chmod +x /start.sh
+COPY --chmod=755 start.sh /
+#RUN chmod +x /start.sh
 
 # Welcome Message
 #COPY --from=logo runpod.txt /etc/runpod.txt
 #RUN echo 'cat /etc/runpod.txt' >> /root/.bashrc
 #RUN echo 'echo -e "\nWelcome to RunPod!\nFor detailed documentation and guides, please visit:\n\033[1;34mhttps://docs.runpod.io/docs\033[0m\n\n"' >> /root/.bashrc
 
-CMD ["/start.sh"]
+SHELL ["/bin/bash", "--login", "-c"]
+ENTRYPOINT ["/start.sh"]
