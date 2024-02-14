@@ -102,6 +102,7 @@ RUN pip3 install transformers
 RUN pip3 install timm
 RUN pip3 install protobuf==3.20.*
 RUN pip3 install datasets
+RUN pip3 install hf_transfer
 
 # change/remote as needed
 RUN git clone https://github.com/SolitaryThinker/dotfiles.git
