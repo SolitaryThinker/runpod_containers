@@ -3,7 +3,9 @@
 #FROM pytorch/pytorch:latest
 #FROM nvcr.io/nvidia/pytorch:24.03-py3
 #FROM ubuntu:22.04
-FROM runpod/pytorch:2.2.0-py3.10-cuda12.1.1-devel-ubuntu22.04
+#FROM nvidia/cuda:12.3.2-cudnn9-runtime-ubuntu22.04
+FROM nvidia/cuda:12.2.2-cudnn8-runtime-ubuntu22.04
+
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
@@ -132,7 +134,7 @@ RUN ldconfig
 #RUN apt-get update
 #RUN apt-get -y install cuda-toolkit-12-1
 
-# install cuDNN 12
+## install cuDNN 12
 #RUN apt-get -y install cudnn-cuda-12
 #RUN apt-get install -y nvidia-kernel-open-535
 #RUN apt-get install -y cuda-drivers-535
@@ -140,11 +142,11 @@ RUN ldconfig
 ENV _GLIBCXX_USE_CXX11_ABI=1
 ENV USE_CUSPARSELT=1
 
-#RUN git clone --recursive https://github.com/pytorch/pytorch
-#WORKDIR /workspace/pytorch
+RUN git clone --recursive https://github.com/pytorch/pytorch
+WORKDIR /workspace/pytorch
 
 
-#RUN apt install -y gnupg
+RUN apt install -y gnupg
 
 #RUN wget https://repo.anaconda.com/archive/Anaconda3-2024.02-1-Linux-x86_64.sh
 #RUN chmod u+x Anaconda3-2024.02-1-Linux-x86_64.sh
@@ -155,46 +157,46 @@ ENV USE_CUSPARSELT=1
 
 
 # python install
-#RUN add-apt-repository ppa:deadsnakes/ppa && \
-    #apt install --yes --no-install-recommends \
-    #python3.10-dev \
-    #python3.10-venv \
-    #python3.10-distutils
+RUN add-apt-repository ppa:deadsnakes/ppa && \
+    apt install --yes --no-install-recommends \
+    python3.10-dev \
+    python3.10-venv \
+    python3.10-distutils
 
-#RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && \
-    #python3.10 get-pip.py
+RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && \
+    python3.10 get-pip.py
 
-#RUN python3.10 -m pip install --upgrade pip
+RUN python3.10 -m pip install --upgrade pip
 
-#RUN pip3 install cmake \
-    #ninja
-##RUN apt install -y intel::mkl-static intel::mkl-include
-##RUN pip3 install -c pytorch magma-cuda123
-#RUN make triton
-##ENV CMAKE_PREFIX_PATH=${CONDA_PREFIX:-"$(dirname $(which conda))/../"}
-#RUN apt-get install python3-setuptools
-#RUN pip3 install -r requirements.txt
+RUN pip3 install cmake \
+    ninja
+#RUN apt install -y intel::mkl-static intel::mkl-include
+#RUN pip3 install -c pytorch magma-cuda123
+RUN make triton
+#ENV CMAKE_PREFIX_PATH=${CONDA_PREFIX:-"$(dirname $(which conda))/../"}
+RUN apt-get install python3-setuptools
+RUN pip3 install -r requirements.txt
 
-#RUN pip3 install setuptools \
-    #pyyaml
-#ENV CMAKE_CUDA_COMPILER="/usr/local/cuda/bin"
-##ENV MAX_JOBS=3
-#RUN env MAX_JOBS=5 python3 setup.py develop
-
-
+RUN pip3 install setuptools \
+    pyyaml
+ENV CMAKE_CUDA_COMPILER="/usr/local/cuda/bin"
+#ENV MAX_JOBS=3
+RUN env MAX_JOBS=3 python3 setup.py develop
 
 
-RUN pip3 install transformers
-RUN pip3 install timm
+
+
+#RUN pip3 install transformers
+#RUN pip3 install timm
 #RUN pip3 install protobuf==3.20.*
-RUN pip3 install datasets
-RUN pip3 install hf_transfer
-RUN pip3 install bitsandbytes
-RUN pip3 install accelerate
+#RUN pip3 install datasets
+#RUN pip3 install hf_transfer
+#RUN pip3 install bitsandbytes
+#RUN pip3 install accelerate
 #RUN pip3 install peft
-RUN pip3 install deepspeed
-RUN apt-get -y install libopenmpi-dev
-RUN pip3 install mpi4py
+#RUN pip3 install deepspeed
+#RUN apt-get -y install libopenmpi-dev
+#RUN pip3 install mpi4py
 
 
 
