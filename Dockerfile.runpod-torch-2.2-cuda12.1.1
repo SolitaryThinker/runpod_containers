@@ -1,0 +1,252 @@
+FROM runpod/pytorch:2.2.0-py3.10-cuda12.1.1-devel-ubuntu22.04
+
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
+ENV SHELL=/bin/bash
+ENV PYTHONUNBUFFERED=True
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Override the default huggingface cache directory.
+ENV HF_HOME="/workspace/.cache/huggingface/"
+ENV HF_DATASETS_CACHE="/workspace/.cache/huggingface/datasets/"
+ENV DEFAULT_HF_METRICS_CACHE="/workspace/.cache/huggingface/metrics/"
+ENV DEFAULT_HF_MODULES_CACHE="/workspace/.cache/huggingface/modules/"
+ENV HUGGINGFACE_HUB_CACHE="/workspace/.cache/huggingface/hub/"
+ENV HUGGINGFACE_ASSETS_CACHE="/workspace/.cache/huggingface/assets/"
+
+# Faster transfer of models from the hub to the container
+ENV HF_HUB_ENABLE_HF_TRANSFER="1"
+
+# Shared python package cache
+ENV VIRTUALENV_OVERRIDE_APP_DATA="/workspace/.cache/virtualenv/"
+ENV PIP_CACHE_DIR="/workspace/.cache/pip/"
+
+# Set Default Python Version
+ENV PYTHON_VERSION="3.10"
+
+WORKDIR /
+
+# Update, upgrade, install packages and clean up
+RUN apt-get update --yes && \
+    apt-get upgrade --yes && \
+
+    # Basic Utilities
+    apt install --yes --no-install-recommends \
+    bash \
+    ca-certificates \
+    curl \
+    file \
+    git \
+    inotify-tools \
+    libgl1 \
+    lsof \
+    vim \
+    nano \
+    tmux \
+    nginx \
+
+    # Required for SSH access
+    openssh-server \
+
+    procps \
+    rsync \
+    sudo \
+    software-properties-common \
+    unzip \
+    wget \
+    zip && \
+
+    # Build Tools and Development
+    apt install --yes --no-install-recommends \
+    build-essential \
+    make \
+    cmake \
+    gfortran \
+    libblas-dev \
+    liblapack-dev && \
+
+
+    # Deep Learning Dependencies and Miscellaneous
+    apt install --yes --no-install-recommends \
+    libatlas-base-dev \
+    libffi-dev \
+    libhdf5-serial-dev \
+    libsm6 \
+    libssl-dev && \
+
+    # File Systems and Storage
+    apt install --yes --no-install-recommends \
+    cifs-utils \
+    nfs-common \
+    zstd &&\
+
+    # Cleanup
+    apt-get autoremove -y && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* && \
+
+    # Set locale
+    echo "en_US.UTF-8 UTF-8" > /etc/locale.gen
+
+
+
+#### DO NOT REMOVE
+#COPY env.sh /workspace/env.sh
+#RUN source /workspace/env.sh
+WORKDIR /root
+### DO NOT REMOVE
+
+
+# change/remote as needed
+RUN git clone https://github.com/SolitaryThinker/dotfiles.git
+WORKDIR /root/dotfiles/
+RUN git checkout runpod
+RUN chmod +x setup.sh
+RUN ./setup.sh -cf vim
+RUN ./setup.sh -cf bash
+#RUN rm /root/.gitconfig
+RUN stow git
+#RUN cp ~/dotfiles/git/.gitconfig ~/
+
+WORKDIR /workspace/
+RUN wget -P /workspace/ \
+    https://github.com/git-lfs/git-lfs/releases/download/v3.4.1/git-lfs-linux-amd64-v3.4.1.tar.gz \
+    && \
+    tar -xvf git-lfs-linux-amd64-v3.4.1.tar.gz && \
+    sudo /workspace/git-lfs-3.4.1/install.sh
+
+RUN ldconfig
+
+
+
+# build pytorch
+
+
+# install CUDA 12.1
+#RUN wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-keyring_1.1-1_all.deb
+#RUN dpkg -i cuda-keyring_1.1-1_all.deb
+#RUN apt-get update
+#RUN apt-get -y install cuda-toolkit-12-1
+
+# install cuDNN 12
+#RUN apt-get -y install cudnn-cuda-12
+#RUN apt-get install -y nvidia-kernel-open-535
+#RUN apt-get install -y cuda-drivers-535
+
+#ENV _GLIBCXX_USE_CXX11_ABI=1
+#ENV USE_CUSPARSELT=1
+
+#RUN git clone --recursive https://github.com/pytorch/pytorch
+#WORKDIR /workspace/pytorch
+
+
+#RUN apt install -y gnupg
+
+#RUN wget https://repo.anaconda.com/archive/Anaconda3-2024.02-1-Linux-x86_64.sh
+#RUN chmod u+x Anaconda3-2024.02-1-Linux-x86_64.sh
+#RUN ./Anaconda3-2024.02-1-Linux-x86_64.sh -b
+#RUN conda init
+#RUN conda install cmake ninja
+#RUN pip install -r requirements.txt
+
+
+# python install
+#RUN add-apt-repository ppa:deadsnakes/ppa && \
+    #apt install --yes --no-install-recommends \
+    #python3.10-dev \
+    #python3.10-venv \
+    #python3.10-distutils
+
+#RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && \
+    #python3.10 get-pip.py
+
+#RUN python3.10 -m pip install --upgrade pip
+
+#RUN pip3 install cmake \
+    #ninja
+##RUN apt install -y intel::mkl-static intel::mkl-include
+##RUN pip3 install -c pytorch magma-cuda123
+#RUN make triton
+##ENV CMAKE_PREFIX_PATH=${CONDA_PREFIX:-"$(dirname $(which conda))/../"}
+#RUN apt-get install python3-setuptools
+#RUN pip3 install -r requirements.txt
+
+#RUN pip3 install setuptools \
+    #pyyaml
+#ENV CMAKE_CUDA_COMPILER="/usr/local/cuda/bin"
+##ENV MAX_JOBS=3
+#RUN env MAX_JOBS=5 python3 setup.py develop
+
+RUN wget https://repo.anaconda.com/archive/Anaconda3-2024.02-1-Linux-x86_64.sh
+
+RUN chmod u+x Anaconda3-2024.02-1-Linux-x86_64.sh
+RUN ./Anaconda3-2024.02-1-Linux-x86_64.sh -b
+RUN ~/anaconda3/bin/conda init
+
+
+#RUN pip3 install transformers
+#RUN pip3 install timm
+##RUN pip3 install protobuf==3.20.*
+#RUN pip3 install datasets
+#RUN pip3 install hf_transfer
+#RUN pip3 install bitsandbytes
+#RUN pip3 install accelerate
+##RUN pip3 install peft
+#RUN pip3 install deepspeed
+#RUN apt-get -y install libopenmpi-dev
+#RUN pip3 install mpi4py
+#RUN pip install flash-attn aiohttp
+
+RUN ~/anaconda3/bin/conda create -n vllm python=3.9 -y
+RUN ~/anaconda3/bin/conda create -n vllm10 python=3.10 -y
+
+RUN . ~/.bashrc
+WORKDIR /workspace/
+
+
+COPY vllm /workspace/vllm
+COPY pp /workspace/vllm
+
+WORKDIR /workspace/vllm
+#ENV PATH="/root/anaconda3/bin:$PATH"
+#RUN conda init bash
+#RUN source  /root/anaconda3/bin/activate vllm \
+    #&& pip install -e . \
+    #&& pip install flash-attn aiohttp
+#RUN source  /root/anaconda3/bin/activate vllm10 \
+    #&& pip install -e . \
+    #&& pip install flash-attn aiohttp
+
+    #&& pip install -e .
+#RUN conda activate vllm10 \
+    #&& pip install -e .
+#RUN pip install -e .
+#RUN ~/anaconda3/bin/conda init
+#RUN ~/anaconda3/bin/conda activate vllm10
+#RUN pip install flash-attn aiohttp
+#RUN ~/anaconda3/bin/conda activate vllm
+#RUN pip install -e .
+#RUN pip install flash-attn aiohttp
+WORKDIR /workspace/
+
+
+
+# NGINX Proxy
+COPY nginx.conf /etc/nginx/nginx.conf
+#COPY --from=proxy readme.html /usr/share/nginx/html/readme.html
+
+# Copy the README.md
+#COPY README.md /usr/share/nginx/html/README.md
+
+# Start Scripts
+COPY start.sh /
+#COPY post_start.sh /
+RUN chmod +x /start.sh
+    #chmod +x /post_start.sh
+
+# Welcome Message
+#COPY --from=logo runpod.txt /etc/runpod.txt
+#RUN echo 'cat /etc/runpod.txt' >> /root/.bashrc
+#RUN echo 'echo -e "\nFor detailed documentation and guides, please visit:\n\033[1;34mhttps://docs.runpod.io/\033[0m and \033[1;34mhttps://blog.runpod.io/\033[0m\n\n"' >> /root/.bashrc
+
+CMD ["/start.sh"]
